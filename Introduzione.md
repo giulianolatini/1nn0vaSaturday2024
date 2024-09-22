@@ -18,14 +18,14 @@ Perché é divertente e perché é possibile. Spesso si pensa che per fare qualc
 
 Con l'ausilio di PowerShell, un linguaggio di scripting e di automazione di Microsoft, che é in grado di interagire con i sistemi operativi Windows e Linux, con i database SQL e NoSQL, con i servizi RESTful e con i servizi cloud. L'uso di HTTP(S) come canale di comunicazione tra i vari componenti del sistema permette di superare le barriere poste dai firewall e dai NAT. L'uso di un database di serie temporali permette di memorizzare dati riferiti temporalmente in modo efficiente e di analizzarli velocemente. L'uso di un engine di analisi dati permette di generare alert e report in modo flessibile richiamando script PowerShell.
 
-# Gli strumenti necessari sono:
+## Gli strumenti necessari sono
 
 - Un sistema operativo Windows 10 o Windows Server 2016 o Linux
 - Un database InfluxDB
 - Un engine di analisi dati Kapacitor
 - Un sistema di monitoraggio Grafana
 - Un sistema di notifica Telegram
-
-
+- Un sistema di notifica Email e/o app mobile
+  
 ---
 [Biografia]: Biografia.md
