@@ -24,19 +24,19 @@ Sure, I can help you visualize that setup! Here's a schematic representation of 
 Here's a simplified schematic diagram:
 
 ```
-                                       +-------------------+       +-------------------+
-                                       |                   |       |                   |
-                                       | PowerShell Script |       |   Windows Server  |
-         +------------------------+    |                   |       |                   |
-         |                        |    +--------+----------+       +---------+---------+
-         |        Kapacitor       |             |                            |          
-         |                        |             |                            |          
-         |-------------------+    |             v                            v          
-         |                   |    |    +-------------------+       +-------------------+
- Notify  |    TICKscript     |    |    |                   |       |      Telegraf     |
-<--------|    (Alert Logic)  |    |----|    InfluxDB       |<------|  System Metrics   |
-         |                   |    |    |                   |       |  (CPU, RAM, etc.) |
-         +-------------------+----+    +-------------------+       +-------------------+
+                                         +-------------------+       +-------------------+
+                                         |                   |       |                   |
+                                         | PowerShell Script |       |   Windows Server  |
+         +------------------------+      |                   |       |                   |
+         |                        |      +--------+----------+       +---------+---------+
+         |        Kapacitor       |               |                            |          
+         |                        |               |                            |          
+         |-------------------+    |               v                            v          
+         |                   |    |      +-------------------+       +-------------------+
+ Notify  |    TICKscript     |    |      |                   |       |      Telegraf     |
+<--------|    (Alert Logic)  |    |----->|    InfluxDB       |<------|  System Metrics   |
+         |                   |    |      |                   |       |  (CPU, RAM, etc.) |
+         +-------------------+----+      +-------------------+       +-------------------+
 ```
 
 ### Detailed Steps:
@@ -44,9 +44,9 @@ Here's a simplified schematic diagram:
 1. **PowerShell Script**:
 
 ```powershell
-   $uri = "http://<docker_host_ip>:8086/api/v2/write?org=‹Org›&bucket=‹Bucket›&precision=ms"
-   $body = "measurement,host=server01,region=us-west value=0.64 "
-   Invoke-RestMethod -Uri $uri -Method Post -Body $body
+$uri = "http://<docker_host_ip>:8086/api/v2/write?org=‹Org›&bucket=‹Bucket›&precision=ms"
+$body = "measurement,host=server01,region=us-west value=0.64 "
+Invoke-RestMethod -Uri $uri -Method Post -Body $body
 ```
 
 2. **Telegraf Configuration**:
@@ -86,6 +86,9 @@ config > telegraf.conf
   influxdb:2.0
 
 # to config influxdb browse http://localhost:8086
+# or use the influx CLI
+# [Set up InfluxDB@Infludata documentation](https://docs.influxdata.com/influxdb/v2/get-started/setup/?t=Set+up+with+the+CLI)
+& docker exec -it influxdb influx
 ```
 
 3. **Kapacitor TICKscript**:
@@ -96,8 +99,8 @@ config > telegraf.conf
            .measurement('cpu')
        |alert()
            .crit(lambda: "usage_idle" < 10)
-           .exec('/path/to/powershell_script.ps1')
-   ```
+           .exec('/path/to/powershell.exe', '/path/to/powershell_script.ps1 -Message "Alert: CPU usage is critical"')
+```
 
 This setup ensures that your system metrics are continuously monitored and any critical alerts trigger a PowerShell script to handle the situation. If you need further customization or have any questions, feel free to ask!
 
