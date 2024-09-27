@@ -3,6 +3,18 @@ param (
     [string]$regexp
 )
 
+function Save-Log {
+    param (
+        [hashtable]$result,
+        [string]$filePath
+    )
+
+    $logContent = "Accessible: $($result.Accessible)`n"
+    $logContent += "LoadTime: $($result.LoadTime) seconds`n"
+    $logContent += "Matches: $($result.Matches)`n"
+    $logContent | Out-File -FilePath $filePath -Append
+}
+
 function Test-WebPage {
     param (
         [string]$url,
@@ -31,17 +43,6 @@ function Test-WebPage {
     return $result
 }
 
-function Save-Log {
-    param (
-        [hashtable]$result,
-        [string]$filePath
-    )
-
-    $logContent = "Accessible: $($result.Accessible)`n"
-    $logContent += "LoadTime: $($result.LoadTime) seconds`n"
-    $logContent += "Matches: $($result.Matches)`n"
-    $logContent | Out-File -FilePath $filePath -Append
-}
 
 function Write-InfluxDB {
     param (
@@ -58,8 +59,16 @@ function Write-InfluxDB {
         Authorization = "Token $token"
         Accept = "application/json"
     }
-    $data = "$measurement,host=$hostname accessible=$($fields.Accessible),load_time=$($fields.LoadTime),matches=$($fields.Matches)"
-    Invoke-RestMethod -Uri "$InfluxDBUrl/api/v2/write?org=pve&bucket=pve&precision=ms" -Method Post -Body $data -ContentType "text/plain; charset=utf-8" -Headers $headers
+    $data = "$measurement,host=$hostname " `
+    + "accessible=$($fields.Accessible)," `
+    + "load_time=$($fields.LoadTime)" `
+    + ",matches=$($fields.Matches)"
+    Invoke-RestMethod `
+    -Uri "$InfluxDBUrl/api/v2/write?org=pve&bucket=pve&precision=ms" `
+    -Method Post `
+    -Body $data `
+    -ContentType "text/plain; charset=utf-8" `
+    -Headers $headers
 }
 
 function Send-Notification {
@@ -81,7 +90,10 @@ function Send-Notification {
         client_id     = $clientId
         client_secret = $clientSecret
     }
-    $response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -ContentType "application/x-www-form-urlencoded" -Body $body
+    $response = Invoke-RestMethod `
+        -Method Post -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" `
+        -ContentType "application/x-www-form-urlencoded" `
+        -Body $body
     $accessToken = $response.access_token
     
     # Define the message to send
@@ -91,7 +103,12 @@ function Send-Notification {
         }
     }
     
-    Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/teams/$teamId/channels/$channelId/messages" -Headers @{ Authorization = "Bearer $accessToken" } -Body ($chatText | ConvertTo-Json -Depth 4) -ContentType "application/json"
+    Invoke-RestMethod `
+        -Method Post `
+        -Uri "https://graph.microsoft.com/v1.0/teams/$teamId/channels/$channelId/messages" `
+        -Headers @{ Authorization = "Bearer $accessToken" } `
+        -Body ($chatText | ConvertTo-Json -Depth 4) `
+        -ContentType "application/json"
 
     # Placeholder for notification logic (e.g., email, SMS)
     Write-Output $message
@@ -101,10 +118,16 @@ function Send-Notification {
 $logFilePath = "web_check_log.txt"
 $result = Test-WebPage -url $url -regexp $regexp
 Save-Log -result $result -filePath $logFilePath
-Write-InfluxDB -measurement "web_check" -fields $result -token "mytoken" -InfluxDBUrl "http://‹InfluxDB›:8086"
+Write-InfluxDB `
+    -measurement "web_check" `
+    -fields $result `
+    -token "mytoken" `
+    -InfluxDBUrl "http://‹InfluxDB›:8086"
 
 if ($result.Accessible -and $result.Matches) {
-    Send-Notification -message "Success: The web page is accessible and matches the criteria."
+    Send-Notification `
+        -message "Success: The web page is accessible and matches the criteria."
 } else {
-    Send-Notification -message "Error: The web page check failed."
+    Send-Notification `
+        -message "Error: The web page check failed."
 }
