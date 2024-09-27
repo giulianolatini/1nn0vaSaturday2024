@@ -37,7 +37,9 @@ $Events | Select-Object TimeCreated, Id, Message | Where-Object { $_.Message -li
     Send-MailMessage @sendMailMessageSplat
 }
 
-# Check the events from the last day in the security log to send an email notification when a login event (4624) for the administrator user is found using the Office 365 SMTP server
+# Check the events from the last day in the security log 
+# to send an email notification when a login event (4624) 
+# for the administrator user is found using the Office 365 SMTP server
 $username = "user@domain.com"
 # If MFA is enabled on $username, use an app password
 $password = "user_password"
@@ -60,7 +62,9 @@ $Events | Select-Object TimeCreated, Id, Message | Where-Object { $_.Message -li
                      -Port 587 
 }
 
-# Check the events from the last day in the security log to send a notification on Teams when a login event (4624) for the administrator user is found using Microsoft Graph
+# Check the events from the last day in the security log to send a 
+# notification on Teams when a login event (4624) for 
+# the administrator user is found using Microsoft Graph
 $tenantId = "your_tenant_id"
 $clientId = "your_client_id"
 $clientSecret = "your_client_secret"
@@ -74,7 +78,10 @@ $body = @{
     client_id     = $clientId
     client_secret = $clientSecret
 }
-$response = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -ContentType "application/x-www-form-urlencoded" -Body $body
+$response = Invoke-RestMethod -Method Post `
+-Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" `
+-ContentType "application/x-www-form-urlencoded" `
+-Body $body
 $accessToken = $response.access_token
 
 # Define the message to send
@@ -89,7 +96,11 @@ $Date = (Get-Date).AddDays(-1)
 $Events = Get-WinEvent -FilterHashtable @{ LogName='Security'; StartTime=$Date; Id=4624 }
 $Events | Select-Object TimeCreated, Id, Message | Where-Object { $_.Message -like '*administrator*' } | ForEach-Object {
     # Send the message to the Teams channel
-    Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/teams/$teamId/channels/$channelId/messages" -Headers @{ Authorization = "Bearer $accessToken" } -Body ($message | ConvertTo-Json -Depth 4) -ContentType "application/json"
+    Invoke-RestMethod -Method Post `
+    -Uri "https://graph.microsoft.com/v1.0/teams/$teamId/channels/$channelId/messages" `
+    -Headers @{ Authorization = "Bearer $accessToken" } `
+    -Body ($message | ConvertTo-Json -Depth 4) `
+    -ContentType "application/json"
 }
 
 
@@ -110,6 +121,12 @@ $headers = @{
     Accept = "application/json"
 }
 $diskErrorEvents | ForEach-Object {
-    $data = "disk_errors,host=$hostname event_id=$($_.Id) $([System.DateTimeOffset]::new($_.TimeCreated).ToUnixTimeMilliseconds())"
-    Invoke-RestMethod -Uri "http://192.168.178.95:8086/api/v2/write?org=pve&bucket=pve&precision=ms" -Method Post -Body $data -ContentType "text/plain; charset=utf-8" -Headers $headers
+    $data = "disk_errors,host=$hostname event_id=$($_.Id)" `
+    "$([System.DateTimeOffset]::new($_.TimeCreated).ToUnixTimeMilliseconds())"
+    Invoke-RestMethod `
+    -Uri "http://‹InfluxDB›:8086/api/v2/write?org=pve&bucket=pve&precision=ms" `
+    -Method Post `
+    -Body $data `
+    -ContentType "text/plain; charset=utf-8" `
+    -Headers $headers
 }

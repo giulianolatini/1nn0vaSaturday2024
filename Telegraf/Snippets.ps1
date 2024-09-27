@@ -6,7 +6,9 @@ param (
 )
 
 
-# Check the events from the last day in the security log to send an email notification when a login event (4624) for the administrator user is found using a local SMTP server
+# Check the events from the last day in the security log 
+# to send an email notification when a login event (4624) 
+# for the administrator user is found using a local SMTP server
 $sendMailMessageSplat = @{
     From = 'User01 <user01@fabrikam.com>'
     To = 'User02 <user02@fabrikam.com>', 'User03 <user03@fabrikam.com>'
@@ -18,12 +20,18 @@ $sendMailMessageSplat = @{
 }
 
 $Date = (Get-Date).AddDays(-1)
-$Events = Get-WinEvent -FilterHashtable @{ LogName='Security'; StartTime=$Date; Id=4624 }
-$Events | Select-Object TimeCreated, Id, Message | Where-Object { $_.Message -like '*administrator*' } | ForEach-Object {
-    Send-MailMessage @sendMailMessageSplat
-}
+$Events = Get-WinEvent `
+    -FilterHashtable @{ LogName='Security'; StartTime=$Date; Id=4624 }
+$Events `
+    | Select-Object TimeCreated, Id, Message `
+    | Where-Object { $_.Message -like '*administrator*' } `
+    | ForEach-Object { `
+        Send-MailMessage @sendMailMessageSplat `
+    }
 
-# Check the events from the last day in the security log to send an email notification when a login event (4624) for the administrator user is found using the Office 365 SMTP server
+# Check the events from the last day in the security log 
+# to send an email notification when a login event (4624) 
+# for the administrator user is found using the Office 365 SMTP server
 $username = "user@domain.com"
 # If MFA is enabled on $username, use an app password
 $password = "user_password"
